@@ -1,0 +1,19 @@
+[
+  {
+    "applicationNumber": "123",
+    "applicantName": "tuhin",
+    "visaType": "Tourist",
+    "status": "Approved",
+    "submissionDate": "2025-10-15",
+    "statusUpdateDate": "2025-10-15"
+  },
+  {
+    "applicationNumber": "1234",
+    "passportNumber": "A123",
+    "fullName": "ABC",
+    "nationality": "XYZ",
+    "visaType": "Turist",
+    "status": "Approved",
+    "_id": "1760534132681"
+  }
+]
