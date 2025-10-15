@@ -2422,7 +2422,7 @@ a.ui-button:active,
 									</a>
 								</div>
 								<div class="col-8 align-self-center">
-									<a data-savepage-href="visaPubInq.do" href="https://rnt.moi.gov.kw/esrv/visaPubInq.do">
+									<a data-savepage-href="visaPubInq.do" href="#">
 										Enquire e-Visa Status </a>
 								</div>
 							</div>
@@ -2519,10 +2519,24 @@ a.ui-button:active,
 <!-- ================================================yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy ===================-->
 <div class="container mt-5">
   <h3 class="text-center mb-4">Visa Application Status Check</h3>
+
   <div class="form-group">
-    <label for="visaNumber">Enter Visa/Application Number:</label>
+    <label for="passportNumber">Passport Number:</label>
+    <input style="width: 50%;" type="text" id="passportNumber" class="form-control" placeholder="Enter your passport number">
+  </div>
+
+  <div class="form-group">
+    <label for="dob">Date of Birth (YYYY-MM-DD):</label>
+    <input style="width: 50%;" type="text" id="dob" class="form-control" placeholder="e.g. 1990-05-20">
+  </div>
+
+  <div style="margin-top:10px;">— or —</div>
+
+  <div class="form-group">
+    <label for="visaNumber">Enter Visa/Application Number (optional):</label>
     <input style="width: 50%;" type="text" id="visaNumber" class="form-control" placeholder="Enter your visa number">
   </div>
+
   <button class="btn btn-primary mt-3" onclick="checkStatus()">Check Status</button>
 
   <div id="result" class="mt-4"></div>
@@ -2530,40 +2544,34 @@ a.ui-button:active,
 
 <script>
 async function checkStatus() {
+  const passport = document.getElementById('passportNumber').value.trim();
+  const dob = document.getElementById('dob').value.trim();
   const visaNumber = document.getElementById('visaNumber').value.trim();
   const resultDiv = document.getElementById('result');
 
-  if (!visaNumber) {
-    resultDiv.innerHTML = '<div class="alert alert-warning">Please enter a visa number.</div>';
+  // basic validation
+  if (!visaNumber && (!passport || !dob)) {
+    resultDiv.innerHTML = '<div class="alert alert-warning">Please enter either a visa number or both passport number and date of birth.</div>';
     return;
   }
 
   try {
-    const response = await fetch(`/admin/applications?visa=${visaNumber}`);
-    if (!response.ok) throw new Error('Not found');
-
-    const data = await response.json();
-
-    if (data && data.length > 0) {
-      const app = data[0];
-      resultDiv.innerHTML = `
-        <div class="card mt-3">
-          <div class="card-body">
-            <h5>Application No: ${app.applicationNumber}</h5>
-            <p><b>Full Name:</b> ${app.fullName}</p>
-            <p><b>Passport No:</b> ${app.passportNumber}</p>
-            <p><b>Nationality:</b> ${app.nationality}</p>
-            <p><b>Visa Type:</b> ${app.visaType}</p>
-            <p><b>Status:</b> <span class="badge badge-info">${app.status}</span></p>
-          </div>
-        </div>
-      `;
+    // prefer visa if provided
+    let url = '/check';
+    if (visaNumber) {
+      url += `?visa=${encodeURIComponent(visaNumber)}`;
     } else {
-      resultDiv.innerHTML = '<div class="alert alert-danger">No record found.</div>';
+      url += `?passport=${encodeURIComponent(passport)}&dob=${encodeURIComponent(dob)}`;
     }
 
+    const response = await fetch(url);
+    const text = await response.text();
+
+    // server returns an HTML snippet (as implemented above) — we just display it
+    resultDiv.innerHTML = text;
   } catch (err) {
-    resultDiv.innerHTML = '<div class="alert alert-danger">Error fetching data.</div>';
+    console.error(err);
+    resultDiv.innerHTML = '<div class="alert alert-danger">Error fetching data. Please try again later.</div>';
   }
 }
 </script>

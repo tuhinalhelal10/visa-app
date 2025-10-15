@@ -96,21 +96,44 @@ app.get('/admin-login', (req, res) => {
 
 // Start server
 app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+
 // ✅ Public Visa Check Page
+// Replace existing /check route with this:
 app.get('/check', (req, res) => {
-  const visa = req.query.visa;
+  const visa = req.query.visa && req.query.visa.trim();
+  const passport = req.query.passport && req.query.passport.trim();
+  const dob = req.query.dob && req.query.dob.trim(); // expect format like YYYY-MM-DD or DD-MM-YYYY depending on your stored value
+
   const apps = readData();
-  const match = apps.find(a => a.applicationNumber === visa);
-  
-  if (!visa) return res.send('Please provide a visa number like /check?visa=12345');
-  if (!match) return res.send('No application found for this number.');
-  
+
+  let match = null;
+
+  if (visa) {
+    match = apps.find(a => a.applicationNumber === visa);
+  } else if (passport && dob) {
+    // try to match both passport and date of birth
+    // ensure your stored records use the same dob format (e.g. '1990-05-20') in applications.json
+    match = apps.find(a => {
+      // allow some flexibility: check both exact and simple normalized forms
+      const storedDob = (a.dateOfBirth || a.dob || '').toString().trim();
+      const storedPassport = (a.passportNumber || '').toString().trim();
+      return storedPassport === passport && storedDob === dob;
+    });
+  } else {
+    return res.send('Please provide a visa number (e.g. /check?visa=12345) OR passport and dob (e.g. /check?passport=ABC123&dob=1990-05-20).');
+  }
+
+  if (!match) return res.send('No application found for the provided information.');
+
+  // you can return JSON instead of HTML if you prefer; for simplicity we'll return a small HTML snippet
   res.send(`
     <h2>Visa Application Result</h2>
-    <p><b>Name:</b> ${match.fullName}</p>
-    <p><b>Passport:</b> ${match.passportNumber}</p>
-    <p><b>Nationality:</b> ${match.nationality}</p>
-    <p><b>Visa Type:</b> ${match.visaType}</p>
-    <p><b>Status:</b> ${match.status}</p>
+    <p><b>Name:</b> ${match.fullName || 'N/A'}</p>
+    <p><b>Application No:</b> ${match.applicationNumber || 'N/A'}</p>
+    <p><b>Passport:</b> ${match.passportNumber || 'N/A'}</p>
+    <p><b>Date of Birth:</b> ${match.dateOfBirth || match.dob || 'N/A'}</p>
+    <p><b>Nationality:</b> ${match.nationality || 'N/A'}</p>
+    <p><b>Visa Type:</b> ${match.visaType || 'N/A'}</p>
+    <p><b>Status:</b> ${match.status || 'N/A'}</p>
   `);
 });
