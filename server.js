@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 // ✅ 2. Admin Login (Simple example)
 app.post('/admin-login', (req, res) => {
     const { username, password } = req.body;
-    if (username === 'admin' && password === '1234') {
+    if (username === 'admin' && password === 'Tuhin@332832') {
         res.json({ success: true });
     } else {
         res.json({ success: false, message: 'Invalid username or password' });
@@ -95,7 +95,9 @@ app.get('/admin-login', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(3000, '0.0.0.0', () => {
+  console.log('✅ Server running on http://0.0.0.0:3000');
+});
 
 // ✅ Public Visa Check Page
 // Replace existing /check route with this:
